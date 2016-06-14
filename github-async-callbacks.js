@@ -10,8 +10,8 @@ const rl = readline.createInterface({
 function hidden(query, callback) {
   "use strict";
   const stdin = process.openStdin();
-  var i = 0;
-  process.stdin.on("data", function(char) {
+  let i = 0;
+  process.stdin.on("data", (char) => {
     char = char + "";
     switch (char) {
       case "\n":
@@ -31,18 +31,18 @@ function hidden(query, callback) {
     });
 }
 
-rl.question("Input github username to lookup.\n", function(data) {
+rl.question("Input github username to lookup.\n", (data) => {
   "use strict";
   rl.pause();
   // Store username to look up
   data = data.replace(/\n/g, '');
   rl.resume();
-  rl.question("Input your github username.\n", function(user) {
+  rl.question("Input your github username.\n", user => {
     rl.pause();
     // Store username to use to authenticate
     user = user.replace(/\n/g, '');
     rl.resume();
-    hidden("Password: ", function(pass) {
+    hidden("Password: ", pass => {
       // Store password for authentication
       pass = pass.replace(/\n/g, '');
       let options = {
@@ -56,7 +56,7 @@ rl.question("Input github username to lookup.\n", function(data) {
         }
       };
       // Get data about the requested user's repositories
-      request(options, function (error, response, body) {
+      request(options, (error, response, body) => {
         body = JSON.parse(body);
         let ans = {name: data};
         let repositories = [];
@@ -66,12 +66,12 @@ rl.question("Input github username to lookup.\n", function(data) {
           repo.repoName = body[i].name;
           repo.contributors = [];
           options.url = 'https://api.github.com/repos/' + data + '/' + repo.repoName + '/contributors';
-          request(options, function (error2, response2, body2) {
+          request(options, (error2, response2, body2) => {
             body2 = JSON.parse(body2);
             // Iterate through collaborators of each repo
             for (let j = 0; j < body2.length; j++) {
               options.url = 'https://api.github.com/users/' + body2[j].login;
-              request(options, function (error3, response3, body3) {
+              request(options, (error3, response3, body3) => {
                 body3 = JSON.parse(body3);
                 // Same name if exists.  Otherwise add username.
                 if (body3.name !== null) {
