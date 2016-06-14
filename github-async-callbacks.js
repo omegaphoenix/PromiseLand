@@ -8,19 +8,19 @@ const rl = readline.createInterface({
 });
 
 function hidden(query, callback) {
-  "use strict";
+  'use strict';
   const stdin = process.openStdin();
   let i = 0;
-  process.stdin.on("data", char => {
-    char = char + "";
+  process.stdin.on('data', char => {
+    char = char + '';
     switch (char) {
-      case "\n":
-      case "\r":
-      case "\u0004":
+      case '\n':
+      case '\r':
+      case '\u0004':
         stdin.pause();
         break;
       default:
-        process.stdout.write("\u001B[2K\u001B[200D"+query+"["+((i%2==1)?"=-":"-=")+"]");
+        process.stdout.write('\u001B[2K\u001B[200D'+query+'['+((i%2==1)?'=-':'-=')+']');
         i++;
         break;
       }
@@ -31,18 +31,18 @@ function hidden(query, callback) {
     });
 }
 
-rl.question("Input github username to lookup.\n", data => {
-  "use strict";
+rl.question('Input github username to lookup.\n', data => {
+  'use strict';
   rl.pause();
   // Store username to look up
   data = data.replace(/\n/g, '');
   rl.resume();
-  rl.question("Input your github username.\n", user => {
+  rl.question('Input your github username.\n', user => {
     rl.pause();
     // Store username to use to authenticate
     user = user.replace(/\n/g, '');
     rl.resume();
-    hidden("Password: ", pass => {
+    hidden('Password: ', pass => {
       // Store password for authentication
       pass = pass.replace(/\n/g, '');
       let options = {
@@ -84,7 +84,7 @@ rl.question("Input github username to lookup.\n", data => {
                 if (j === contributors_data.length - 1) {
                   repositories.push(repo);
                   // Might miss last contributor in last repo
-                  if (i === body.length - 1) {
+                  if (i === repos_data.length - 1) {
                    ans.repos = repositories;
                    console.log(JSON.stringify(ans));
                   }

@@ -1,3 +1,4 @@
+'use strict';
 const readline = require('readline');
 // request library to retrieve info from github API
 const request = require('request');
@@ -6,21 +7,22 @@ const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
+const async = require('async');
 
 function hidden(query, callback) {
-  "use strict";
+  'use strict';
   const stdin = process.openStdin();
   let i = 0;
-  process.stdin.on("data", char => {
-    char = char + "";
+  process.stdin.on('data', char => {
+    char = char + '';
     switch (char) {
-      case "\n":
-      case "\r":
-      case "\u0004":
+      case '\n':
+      case '\r':
+      case '\u0004':
         stdin.pause();
         break;
       default:
-        process.stdout.write("\u001B[2K\u001B[200D"+query+"["+((i%2==1)?"=-":"-=")+"]");
+        process.stdout.write('\u001B[2K\u001B[200D'+query+'['+((i%2==1)?'=-':'-=')+']');
         i++;
         break;
       }
@@ -31,20 +33,35 @@ function hidden(query, callback) {
     });
 }
 
-rl.question("Input github username to lookup.\n", data => {
-  "use strict";
-  rl.pause();
-  // Store username to look up
-  data = data.replace(/\n/g, '');
-  rl.resume();
-  rl.question("Input your github username.\n", user => {
-    rl.pause();
+async.waterfall([
+    // Store username to look up
+    function(callback) {
+      rl.question('Input github username to lookup\n', data => {
+        rl.pause();
+        data = data.replace(/\n/g, '');
+        rl.resume();
+        callback(null, data);
+      });
+    },
     // Store username to use to authenticate
-    user = user.replace(/\n/g, '');
-    rl.resume();
-    hidden("Password: ", pass => {
-      // Store password for authentication
-      pass = pass.replace(/\n/g, '');
+    function(data, callback) {
+      rl.question('Input your github username\n', user => {
+        rl.pause();
+        user = user.replace(/\n/g, '');
+        rl.resume();
+        callback(null, data, user);
+      });
+    },
+    // Store password for authentication
+    function(data, user, callback) {
+      hidden('Password: ', pass => {
+        pass = pass.replace(/\n/g, '');
+        rl.close();
+        callback(null, data, user, pass);
+      });
+    },
+    // Get data about the requested user's repositories
+    function(data, user, pass, callback) {
       let options = {
         url: 'https://api.github.com/users/' + data + '/repos',
         headers: {
@@ -55,46 +72,45 @@ rl.question("Input github username to lookup.\n", data => {
           'pass': pass
         }
       };
-      // Get data about the requested user's repositories
-      request(options, (repos_error, repos_response, repos_data) => {
-        repos_data = JSON.parse(repos_data);
-        let ans = {name: data};
-        let repositories = [];
-        // Iterate through repositories
-        for (let i = 0; i < repos_data.length; i++) {
-          let repo = {};
-          repo.repoName = repos_data[i].name;
-          repo.contributors = [];
-          options.url = 'https://api.github.com/repos/' + data + '/' + repo.repoName + '/contributors';
-          request(options, (contributors_error, contributors_response, contributors_data) => {
-            contributors_data = JSON.parse(contributors_data);
-            // Iterate through collaborators of each repo
-            for (let j = 0; j < contributors_data.length; j++) {
-              options.url = 'https://api.github.com/users/' + contributors_data[j].login;
-              request(options, (indv_error, indv_response, indv_user_data) => {
-                indv_user_data = JSON.parse(indv_user_data);
-                // Same name if exists.  Otherwise add username.
-                if (indv_user_data.name !== null) {
-                  repo.contributors.push(indv_user_data.name);
-                }
-                else {
-                  repo.contributors.push(indv_user_data.login);
-                }
-                // After loop completes, push
-                if (j === contributors_data.length - 1) {
-                  repositories.push(repo);
-                  // Might miss last contributor in last repo
-                  if (i === body.length - 1) {
-                   ans.repos = repositories;
-                   console.log(JSON.stringify(ans));
-                  }
-                }
-              });
-            }
-          });
+      request(options, (error, response, repos_data) => {
+        if (response.statusCode !== 200) {
+          console.log('Error:' +  JSON.stringify(error));
         }
+        repos_data = JSON.parse(repos_data);
+        callback(null, data, user, pass, options, repos_data);
       });
-      rl.close();
-    });
+    },
+    // Add repos
+    function(data, user, pass, options, repos_data, callback) {
+      let ans = {name: data};
+      async.map(repos_data, function(repo_obj, doneCallback) {
+        let repo = {};
+        repo.repoName = repo_obj.name;
+        options.url = 'https://api.github.com/repos/' + data + '/' + repo.repoName + '/contributors';
+        request(options, (error, response, contributors_data) => {
+          contributors_data = JSON.parse(contributors_data);
+          async.map(contributors_data, function(contributors_obj, doneContrCallback) {
+            options.url = 'https://api.github.com/users/' + contributors_obj.login;
+            request(options, (indv_error, indv_response, indv_user_data) => {
+              indv_user_data = JSON.parse(indv_user_data);
+              if (indv_user_data.name !== null) {
+                doneContrCallback(null, indv_user_data.name);
+              }
+              else {
+                doneContrCallback(null, indv_user_data.login);
+              }
+            });
+          }, function(err, contributors_names) {
+            repo.contributors = contributors_names;
+            doneCallback(null, repo);
+          });
+        });
+      }, function(err, repos_json) {
+        ans.repos = repos_json;
+        callback(null, ans);
+      });
+    }
+  ],
+  function(err, ans) {
+    console.log(JSON.stringify(ans));
   });
-});
