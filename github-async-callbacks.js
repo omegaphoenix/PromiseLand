@@ -8,6 +8,7 @@ const rl = readline.createInterface({
 });
 
 function hidden(query, callback) {
+  "use strict";
   const stdin = process.openStdin();
   var i = 0;
   process.stdin.on("data", function(char) {
@@ -19,7 +20,7 @@ function hidden(query, callback) {
         stdin.pause();
         break;
       default:
-        process.stdout.write("\033[2K\033[200D"+query+"["+((i%2==1)?"=-":"-=")+"]");
+        process.stdout.write("\u001B[2K\u001B[200D"+query+"["+((i%2==1)?"=-":"-=")+"]");
         i++;
         break;
       }
@@ -82,6 +83,7 @@ rl.question("Input github username to lookup.\n", function(data) {
                 // After loop completes, push
                 if (j === body2.length - 1) {
                   repositories.push(repo);
+                  // Might miss last contributor in last repo
                   if (i === body.length - 1) {
                    ans.repos = repositories;
                    console.log(JSON.stringify(ans));
