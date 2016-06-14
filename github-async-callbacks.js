@@ -11,7 +11,7 @@ function hidden(query, callback) {
   "use strict";
   const stdin = process.openStdin();
   let i = 0;
-  process.stdin.on("data", (char) => {
+  process.stdin.on("data", char => {
     char = char + "";
     switch (char) {
       case "\n":
@@ -25,13 +25,13 @@ function hidden(query, callback) {
         break;
       }
     });
-    rl.question(query, function(value) {
+    rl.question(query, value => {
       rl.history = rl.history.slice(1);
       callback(value);
     });
 }
 
-rl.question("Input github username to lookup.\n", (data) => {
+rl.question("Input github username to lookup.\n", data => {
   "use strict";
   rl.pause();
   // Store username to look up
@@ -56,32 +56,32 @@ rl.question("Input github username to lookup.\n", (data) => {
         }
       };
       // Get data about the requested user's repositories
-      request(options, (error, response, body) => {
-        body = JSON.parse(body);
+      request(options, (repos_error, repos_response, repos_data) => {
+        repos_data = JSON.parse(repos_data);
         let ans = {name: data};
         let repositories = [];
         // Iterate through repositories
-        for (let i = 0; i < body.length; i++) {
+        for (let i = 0; i < repos_data.length; i++) {
           let repo = {};
-          repo.repoName = body[i].name;
+          repo.repoName = repos_data[i].name;
           repo.contributors = [];
           options.url = 'https://api.github.com/repos/' + data + '/' + repo.repoName + '/contributors';
-          request(options, (error2, response2, body2) => {
-            body2 = JSON.parse(body2);
+          request(options, (contributors_error, contributors_response, contributors_data) => {
+            contributors_data = JSON.parse(contributors_data);
             // Iterate through collaborators of each repo
-            for (let j = 0; j < body2.length; j++) {
-              options.url = 'https://api.github.com/users/' + body2[j].login;
-              request(options, (error3, response3, body3) => {
-                body3 = JSON.parse(body3);
+            for (let j = 0; j < contributors_data.length; j++) {
+              options.url = 'https://api.github.com/users/' + contributors_data[j].login;
+              request(options, (indv_error, indv_response, indv_user_data) => {
+                indv_user_data = JSON.parse(indv_user_data);
                 // Same name if exists.  Otherwise add username.
-                if (body3.name !== null) {
-                  repo.contributors.push(body3.name);
+                if (indv_user_data.name !== null) {
+                  repo.contributors.push(indv_user_data.name);
                 }
                 else {
-                  repo.contributors.push(body3.login);
+                  repo.contributors.push(indv_user_data.login);
                 }
                 // After loop completes, push
-                if (j === body2.length - 1) {
+                if (j === contributors_data.length - 1) {
                   repositories.push(repo);
                   // Might miss last contributor in last repo
                   if (i === body.length - 1) {
