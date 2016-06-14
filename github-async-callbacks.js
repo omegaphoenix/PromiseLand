@@ -85,8 +85,8 @@ rl.question('Input github username to lookup.\n', data => {
                   repositories.push(repo);
                   // Might miss last contributor in last repo
                   if (i === repos_data.length - 1) {
-                   ans.repos = repositories;
-                   console.log(JSON.stringify(ans));
+                    ans.repos = repositories;
+                    console.log(JSON.stringify(ans));
                   }
                 }
               });
