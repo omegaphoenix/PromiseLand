@@ -1,0 +1,21 @@
+Brew iGithub-async program specifications:
+
+Input (Command Line Argument): <github username to lookup>
+
+Output: { name: <github username to lookup>, repos: [{repoName: <repo name>,
+contributors: [<contributors name>, ...]},  ...}
+
+Use “request” javascript library to retrieve info from github API.
+
+Task List
+
+Write github-async program with callbacks (hard)
+Write github-async program with async library (moderate)
+Make sure to use both Waterfall and Map
+Make github-async program follow eslint rules (easy)
+Write async.map with callbacks (moderate)
+Write async.mapLimit with callbacks (hard)
+Write github-async program with promises (easy/moderate)
+Write async.mapLimit with promises (easy)
+Write github-async program with await (easy)
+Write queue with callbacks (moderate)
