@@ -94,8 +94,8 @@ const getRepos = function([data, user, pass]) {
 const addContributors = function([data, user, pass, options, repos_data]) {;
   return new Promise(function(resolve, reject) {
       let ans = {name: data};
+      console.log(data);
       async.map(repos_data, function(repo_obj, doneCallback) {
-        console.log(data);
         let repo = {};
         repo.repoName = repo_obj.name;
         options.url = 'https://api.github.com/repos/' + data + '/' + repo.repoName + '/contributors';
