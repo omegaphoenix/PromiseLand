@@ -6,7 +6,6 @@ export default function myasyncmapLimit(coll, lim, iteratee, callback) {
   let completed = 0;
   var loop = function() {
     while (running < lim && i < coll.length) {
-      console.log(i);
       running++;
       iteratee(coll[i], function(func_err, transformed) {
         if (func_err === null) {
