@@ -7,6 +7,8 @@ const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
+const Promise = require('bluebird');
+const async = require('async');
 
 function hidden(query, callback) {
   'use strict';
@@ -94,7 +96,6 @@ const getRepos = function([data, user, pass]) {
 const addContributors = function([data, user, pass, options, repos_data]) {;
   return new Promise(function(resolve, reject) {
       let ans = {name: data};
-      console.log(data);
       async.map(repos_data, function(repo_obj, doneCallback) {
         let repo = {};
         repo.repoName = repo_obj.name;
@@ -113,29 +114,27 @@ const addContributors = function([data, user, pass, options, repos_data]) {;
               }
             });
           }, function(err, contributors_names) {
-            console.log(JSON.stringify(ans));
             repo.contributors = contributors_names;
             doneCallback(null, repo);
           });
         });
       }, function(err, repos_json) {
         ans.repos = repos_json;
-        console.log(JSON.stringify(ans));
         resolve(ans);
       });
   });
 };
 
 getData().then(function(data) {
-  getUser(data).then(function(data_arr) {
-    getPass(data_arr).then(function(data_arr2) {
-      getRepos(data_arr2).then(function(data_arr3) {
-        addContributors(data_arr3).then(function(ans) {
-          console.log(JSON.stringify(ans));
-        });
-      });
-    });
-  });
+  return getUser(data);
+}).then(function(data_arr) {
+  return getPass(data_arr);
+}).then(function(data_arr) {
+  return getRepos(data_arr);
+}).then(function(data_arr) {
+  return addContributors(data_arr);
+}).then(function(ans) {
+  console.log(JSON.stringify(ans));
 }).catch(function(error) {
-  console.log(error);
+  throw error;
 });
