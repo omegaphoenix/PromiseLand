@@ -1,5 +1,5 @@
 export default function myasyncmap(coll, iteratee, callback) {
-  var results = [];
+  let results = [];
   for (let i = 0; i < coll.length; i++) {
     iteratee(coll[i], function(err, transformed) {
       if (err === null) {

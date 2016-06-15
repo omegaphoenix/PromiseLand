@@ -1,32 +1,31 @@
+// function to imitate async.mapLimit
 export default function myasyncmapLimit(coll, lim, iteratee, callback) {
-  var results = [];
+  let results = [];
   let i = 0;
-  let num_running = 0;
-  while (i < coll.length) {
-      incrementCounter(num_running, lim, function (counter) {
-        num_running = counter;
-        iteratee(coll[i], function(err, transformed) {
-          if (err === null) {
-            results[i] = transformed;
-            if (i == coll.length - 1) {
-              callback(null, results);
-            }
-            i++;
-            num_running--;
+  let running = 0;
+  let completed = 0;
+  var loop = function() {
+    while (running < lim && i < coll.length) {
+      console.log(i);
+      running++;
+      iteratee(coll[i], function(func_err, transformed) {
+        if (func_err === null) {
+          completed++;
+          running--;
+          results.push(transformed);
+          if (completed >= coll.length) {
+            callback(null, results);
           }
           else {
-            return callback(err, results);
+            loop();
           }
-        });
+        }
+        else {
+          return callback(err);
+        }
       });
-  }
-}
-
-
-function incrementCounter(counter, lim, callback) {
-  if (counter < lim) {
-    counter++;
-    callback(counter);
-    console.log("counter = " + counter);
-  }
-}
+      i++;
+    }
+  };
+  loop();
+};
